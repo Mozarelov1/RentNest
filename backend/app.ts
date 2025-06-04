@@ -6,25 +6,32 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import passport from "passport";
 
-import {AppDataSource} from './service-auth/config/data-source'
 
-const passportConfig = require('./service-auth/config/passport')
+import { AppDataSource } from "./service-auth/config/data-source";
+const passportConfig = require("./service-auth/config/passport");
 
-const authRoutes = require('./service-auth/routes/auth-routes')
+const authRoutes = require("./service-auth/routes/auth-routes");
+
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./swagger.json");
+
+dotenv.config({
+  path: path.resolve(__dirname, ".env"),
+});
 
 const app = express();
 
-dotenv.config({
-    path: path.resolve(__dirname, '.env')
-  });
+AppDataSource.initialize().catch((err) => {
+  console.error("Error during Data Source initialization:", err);
+});
 
-app.use(helmet())
-app.use(cors({
+app.use(helmet());
+app.use(
+  cors({
     credentials: true,
-    origin: `${process.env.CLIENT_URL}` ,
-    
-}));
-
+    origin: process.env.CLIENT_URL,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
