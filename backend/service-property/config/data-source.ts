@@ -2,11 +2,12 @@ import { DataSource } from 'typeorm';
 import dotenv from "dotenv";
 import path from "path";
 
+
 dotenv.config({
     path: path.resolve(__dirname, '../.env')
   });
 
-export const AuthDataSource = new DataSource({
+export const PropertyDataSource = new DataSource({
     type: 'postgres',
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
@@ -15,7 +16,7 @@ export const AuthDataSource = new DataSource({
     database: process.env.DB_NAME,
     synchronize: false,
     dropSchema: false,
-    logging: ['query', 'error'],
     entities: [path.join(__dirname, '..', 'models', '*.ts')],   
     migrations: [path.join(__dirname, '..', 'migrations', '*.ts')],
 });
+

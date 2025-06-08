@@ -23,7 +23,13 @@ router.get( '/google/callback',passport.authenticate('google',{failureRedirect: 
          const user = req.user;
          const token = tokenService.generateJwt(user);
 
-         return res.redirect(`${process.env.CLIENT_URL}/oauth-success?token=${token}`);
+        res.cookie("jwt",token,{
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: tokenService._parseExpiresIn(process.env.JWT_EXPIRES_IN)
+        }).json({ token });
+        
     }
 )
 

@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import passport from "passport";
-import { AppDataSource }      from "../config/data-source";
+import { AuthDataSource }      from "./data-source";
 import { getRepository } from "typeorm";
 
 import path from "path";
@@ -20,10 +20,10 @@ module.exports = () => {
         callbackURL:  process.env.GOOGLE_CALLBACK_URL
 
     },
-        async (refreshToken: any, accessToken: any, profile: any ,done: any) => {
+        async (accessToken: string, refreshToken: string, profile: any, done: any) => {
             try{
                 
-                const userRepo = AppDataSource.getRepository(User);
+                const userRepo = AuthDataSource.getRepository(User);
 
                 let user = await userRepo.findOne({ where : {googleID: profile.id} });
                 if(user){

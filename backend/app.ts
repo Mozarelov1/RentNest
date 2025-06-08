@@ -7,10 +7,15 @@ import helmet from "helmet";
 import passport from "passport";
 
 
-import { AppDataSource } from "./service-auth/config/data-source";
-const passportConfig = require("./service-auth/config/passport");
+
+import { AuthDataSource } from "./service-auth/config/data-source";
+import { PropertyDataSource } from "./service-property/config/data-source";
+
+const googlePassConfig = require("./service-auth/config/googlePassport");         // google config
+const bearerTokPassConfig = require("./service-auth/config/bearerTokPassport");   // bearer-token config
 
 const authRoutes = require("./service-auth/routes/auth-routes");
+const propertyRoutes = require("./service-property/routes/property-routes");
 
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger.json");
@@ -21,9 +26,6 @@ dotenv.config({
 
 const app = express();
 
-AppDataSource.initialize().catch((err) => {
-  console.error("Error during Data Source initialization:", err);
-});
 
 app.use(helmet());
 app.use(
@@ -35,11 +37,15 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-passportConfig();
+googlePassConfig();
+bearerTokPassConfig();
 app.use(passport.initialize());
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/api/auth',authRoutes)
+app.use('/api/properties',propertyRoutes)
+
 // app.use((req: Request, res: Response, next: NextFunction) => {
 //   if (req.body && typeof req.body.content === 'string') {
 //     req.body.content = xss(req.body.content);
@@ -50,7 +56,8 @@ app.use('/api/auth',authRoutes)
 
 const start = async () =>{
         try{
-            AppDataSource.initialize()
+            await AuthDataSource.initialize()
+            await PropertyDataSource.initialize()
             const port : number = Number(process.env.PORT) || 2000;
             app.listen(port, () => console.log(`server started at http://localhost:${port}`));
         }catch(e){

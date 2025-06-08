@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid"
 
 import dotenv from "dotenv";
 import path from "path";
-import { AppDataSource } from "../config/data-source";
+import { AuthDataSource } from "../config/data-source";
 
 const User = require("../models/user-model")
 const jwt = require("jsonwebtoken");
@@ -18,7 +18,7 @@ class TokenService{
     jwtExpiresIn: any;
 
     constructor() {
-    this.userRepo = AppDataSource.getRepository(User);
+    this.userRepo = AuthDataSource.getRepository(User);
     this.jwtSecret = process.env.JWT_SECRET;
     this.jwtExpiresIn = process.env.JWT_EXPIRES_IN 
   }
