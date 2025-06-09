@@ -55,6 +55,19 @@ class PropertyController{
         }
     }
 
+    async deleteProperty(req: Request, res: Response, next: NextFunction){
+        try{
+            const id = Number(req.params.propertyId);
+
+            await propertyService.deleteProperty(id);
+
+            res.json({ delete: "success" })
+        }catch(e){
+            console.error('Error creating property:', e);
+            next(e); 
+        }
+    }
+
     async uploadPropertyPhoto(req: Request, res: Response, next: NextFunction){
         
     const singleUpload = () =>

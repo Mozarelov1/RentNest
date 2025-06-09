@@ -13,7 +13,6 @@ const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
 const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
 
 
-console.log(region)
 if (!region || !accessKeyId || !secretAccessKey) {
   throw new Error('AWS_REGION, AWS_ACCESS_KEY_ID, or AWS_SECRET_ACCESS_KEY not set');
 }

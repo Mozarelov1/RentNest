@@ -20,6 +20,8 @@ router.get('/:propertyId',passport.authenticate('bearer' , {session: false}),pro
 
 router.put('/:propertyId/edit',passport.authenticate('bearer' , {session: false}),propertyController.updateProperty.bind(propertyController));
 
+router.delete('/:propertyId/delete',passport.authenticate('bearer' , {session: false}),propertyController.deleteProperty.bind(propertyController));
+
 
 
 module.exports = router;

@@ -62,6 +62,16 @@ class PropertyService{
         return await this.propertyRepo.find()
     };
 
+    async deleteProperty(id: number){
+
+        const property = await this.propertyRepo.findOne({ where: {id} })
+        if(!property){
+            throw Boom.notFound('property not found');
+        }
+
+        await this.propertyRepo.delete(id);
+    }
+
    async uploadPropertyPhoto(propertyId: number, fileUrl: string) {
     const property = await this.propertyRepo.findOne({ where: { id: propertyId } });
     if (!property) {
