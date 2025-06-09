@@ -82,17 +82,5 @@ module.exports = new EntitySchema({
       type:"simple-array",
       nullable: true,
     },
-        },
-    
-    relations:{
-    //@ts-ignore
-    owner: {
-      target: "User",       
-      type: "many-to-one",
-      joinColumn: { name: "ownerId" },
-      cascade: false,
-      inverseSide: "properties",      
-      nullable: false,
-    },
-    }
+        }
 })

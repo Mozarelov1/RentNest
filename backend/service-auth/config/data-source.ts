@@ -12,10 +12,9 @@ export const AuthDataSource = new DataSource({
     port: Number(process.env.DB_PORT),
     username: process.env.DB_USER,
     password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
+    database: process.env.DB_NAME_AUTH,
     synchronize: false,
     dropSchema: false,
-    logging: ['query', 'error'],
     entities: [path.join(__dirname, '..', 'models', '*.ts')],   
     migrations: [path.join(__dirname, '..', 'migrations', '*.ts')],
 });

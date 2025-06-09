@@ -1,6 +1,7 @@
 import { CreatePropertyDto } from "../dto/CreatePropertyDto";
 import { PropertyDataSource } from "../config/data-source";
-import  Boom  from "@hapi/boom";
+import Boom from '@hapi/boom';
+import type { Express } from 'express';
 
 const Property = require("../models/property-model")
 
@@ -38,7 +39,7 @@ class PropertyService{
         const property = await this.propertyRepo.findOne({ where: {id} })
 
         if(!property){
-            // throw  Boom.notFound('property not found');
+            throw  Boom.notFound('property not found');
         }
 
         return property;
@@ -48,7 +49,7 @@ class PropertyService{
         const property = await this.propertyRepo.findOne({ where: {id} })
 
         if(!property){
-            // throw Boom.notFound('property not found');
+            throw Boom.notFound('property not found');
         }
 
         await this.propertyRepo.update(id,dto);
@@ -57,11 +58,21 @@ class PropertyService{
 
     };
 
-    getProperties(){
-        return this.propertyRepo.find()
+    async getProperties(){
+        return await this.propertyRepo.find()
     };
 
+   async uploadPropertyPhoto(propertyId: number, fileUrl: string) {
+    const property = await this.propertyRepo.findOne({ where: { id: propertyId } });
+    if (!property) {
+      throw Boom.notFound(`Property with id=${propertyId} not found`);
+    }
 
+    property.photos = Array.isArray(property.photos) ? property.photos : [];
+    property.photos.push(fileUrl);
+
+    return this.propertyRepo.save(property);
+  }
 
 }
 

@@ -19,6 +19,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.826.0",
     "@hapi/boom": "^10.0.1",
     "@types/node": "^22.15.29",
     "@types/passport-http-bearer": "^1.0.41",
@@ -35,6 +36,7 @@
     "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",
     "multer": "^2.0.0",
+    "multer-s3": "^3.0.1",
     "nodemailer": "^7.0.3",
     "nodemon": "^3.1.10",
     "passport": "^0.7.0",
@@ -55,6 +57,7 @@
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/multer": "^1.4.12",
+    "@types/multer-s3": "^3.0.3",
     "@types/nodemailer": "^6.4.17",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
