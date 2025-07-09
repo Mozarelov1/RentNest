@@ -12,7 +12,10 @@
     "migration:revertAuth": "npm run typeorm -- --dataSource ./service-auth/config/data-source.ts migration:revert",
     "migration:property": "npm run typeorm -- migration:generate ./service-property/migrations/PropertyMigration -d ./service-property/config/data-source.ts",
     "migration:runProperty": "npm run typeorm -- --dataSource ./service-property/config/data-source.ts migration:run",
-    "migration:revertProperty": "npm run typeorm -- --dataSource ./service-property/config/data-source.ts migration:revert"
+    "migration:revertProperty": "npm run typeorm -- --dataSource ./service-property/config/data-source.ts migration:revert",
+    "migration:reservation": "npm run typeorm -- migration:generate ./service-reservations/migrations/ReservationsMigration -d ./service-reservations/config/data-source.ts",
+    "migration:runReservation": "npm run typeorm -- --dataSource ./service-reservations/config/data-source.ts migration:run",
+    "migration:revertReservation": "npm run typeorm -- --dataSource ./service-reservations/config/data-source.ts migration:revert"
   },
   "keywords": [],
   "author": "",
