@@ -19,6 +19,8 @@ const authRoutes = require("./service-auth/routes/auth-routes");
 const propertyRoutes = require("./service-property/routes/property-routes");
 const reservationRoutes = require("./service-reservations/routes/reservation-routes")
 
+import { initKafka } from "./service-notifications/config/kafka";
+
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger.json");
 
@@ -62,6 +64,9 @@ const start = async () =>{
             await AuthDataSource.initialize();
             await PropertyDataSource.initialize();
             await ReservationDataSource.initialize();
+            
+            await initKafka();
+
             const port : number = Number(process.env.PORT) || 2000;
             app.listen(port, () => console.log(`server started at http://localhost:${port}`));
         }catch(e){
