@@ -10,14 +10,17 @@ import passport from "passport";
 
 import { AuthDataSource } from "./service-auth/config/data-source";
 import { PropertyDataSource } from "./service-property/config/data-source";
-import { ReservationDataSource } from "./service-reservations/config/data-source"
+import { ReservationDataSource } from "./service-reservations/config/data-source";
+import { PaymentDataSource } from "./service-payments/config/data-source"
 
 const googlePassConfig = require("./service-auth/config/googlePassport");         // google config
 const bearerTokPassConfig = require("./service-auth/config/bearerTokPassport");   // bearer-token config
 
 const authRoutes = require("./service-auth/routes/auth-routes");
 const propertyRoutes = require("./service-property/routes/property-routes");
-const reservationRoutes = require("./service-reservations/routes/reservation-routes")
+const reservationRoutes = require("./service-reservations/routes/reservation-routes");
+const paymentsRoutes = require("./service-payments/routes/payment-routes")
+
 
 import { initKafka } from "./service-notifications/config/kafka";
 
@@ -50,6 +53,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api/auth',  authRoutes);
 app.use('/api/properties',  propertyRoutes);
 app.use('/api/reservation', reservationRoutes)
+app.use('/api/payments', paymentsRoutes)
 
 // app.use((req: Request, res: Response, next: NextFunction) => {
 //   if (req.body && typeof req.body.content === 'string') {
@@ -64,7 +68,8 @@ const start = async () =>{
             await AuthDataSource.initialize();
             await PropertyDataSource.initialize();
             await ReservationDataSource.initialize();
-            
+            await PaymentDataSource.initialize();
+
             await initKafka();
 
             const port : number = Number(process.env.PORT) || 2000;

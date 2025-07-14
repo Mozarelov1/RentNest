@@ -15,7 +15,9 @@
     "migration:revertProperty": "npm run typeorm -- --dataSource ./service-property/config/data-source.ts migration:revert",
     "migration:reservation": "npm run typeorm -- migration:generate ./service-reservations/migrations/ReservationsMigration -d ./service-reservations/config/data-source.ts",
     "migration:runReservation": "npm run typeorm -- --dataSource ./service-reservations/config/data-source.ts migration:run",
-    "migration:revertReservation": "npm run typeorm -- --dataSource ./service-reservations/config/data-source.ts migration:revert"
+    "migration:revertReservation": "npm run typeorm -- --dataSource ./service-reservations/config/data-source.ts migration:revert",
+    "migration:payment": "npm run typeorm -- migration:generate ./service-payments/migrations/PaymentMigration -d ./service-payments/config/data-source.ts",
+    "migration:runPayment": "npm run typeorm -- --dataSource ./service-payments/config/data-source.ts migration:run"
   },
   "keywords": [],
   "author": "",
@@ -29,6 +31,7 @@
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "boom": "^7.3.0",
+    "cloudipsp-node-js-sdk": "^1.0.8",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
@@ -36,6 +39,7 @@
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
+    "ipsp-js-sdk": "^2.0.12",
     "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",
     "multer": "^2.0.0",
