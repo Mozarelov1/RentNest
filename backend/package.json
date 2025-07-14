@@ -17,7 +17,9 @@
     "migration:runReservation": "npm run typeorm -- --dataSource ./service-reservations/config/data-source.ts migration:run",
     "migration:revertReservation": "npm run typeorm -- --dataSource ./service-reservations/config/data-source.ts migration:revert",
     "migration:payment": "npm run typeorm -- migration:generate ./service-payments/migrations/PaymentMigration -d ./service-payments/config/data-source.ts",
-    "migration:runPayment": "npm run typeorm -- --dataSource ./service-payments/config/data-source.ts migration:run"
+    "migration:runPayment": "npm run typeorm -- --dataSource ./service-payments/config/data-source.ts migration:run",
+    "migration:review": "npm run typeorm -- migration:generate ./service-reviews/migrations/ReviewMigration -d ./service-reviews/config/data-source.ts",
+    "migration:runReview": "npm run typeorm -- --dataSource ./service-reviews/config/data-source.ts migration:run"
   },
   "keywords": [],
   "author": "",
