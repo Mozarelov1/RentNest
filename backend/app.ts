@@ -13,7 +13,8 @@ import { PropertyDataSource } from "./service-property/config/data-source";
 import { ReservationDataSource } from "./service-reservations/config/data-source";
 import { PaymentDataSource } from "./service-payments/config/data-source";
 import { ReviewDataSource } from "./service-reviews/config/data-source";
-import { FavoritesDataSource } from "./service-favorites/config/data-source"
+import { FavoritesDataSource } from "./service-favorites/config/data-source";
+import { ChatDataSource } from "./service-chat/config/data-source"
 
 const googlePassConfig = require("./service-auth/config/googlePassport");         // google config
 const bearerTokPassConfig = require("./service-auth/config/bearerTokPassport");   // bearer-token config
@@ -24,9 +25,10 @@ const reservationRoutes = require("./service-reservations/routes/reservation-rou
 const paymentsRoutes = require("./service-payments/routes/payment-routes");
 const reviewsRoutes = require("./service-reviews/routes/review-routes");
 const favoriteRoutes = require("./service-favorites/routes/favorite-routes");
+const chatRoutes = require("./service-chat/routes/chat-routes")
 
 
-import { initKafka } from "./service-notifications/config/kafka";
+import { initKafka } from "./service-chat/config/kafka";
 
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./swagger.json");
@@ -60,6 +62,7 @@ app.use('/api/reservation', reservationRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/reviews', reviewsRoutes)
 app.use('/api/favorites', favoriteRoutes)
+app.use('/api/messages', chatRoutes)
 
 // app.use((req: Request, res: Response, next: NextFunction) => {
 //   if (req.body && typeof req.body.content === 'string') {
@@ -77,6 +80,7 @@ const start = async () =>{
             await PaymentDataSource.initialize();
             await ReviewDataSource.initialize();
             await FavoritesDataSource.initialize();
+            await ChatDataSource.initialize()
 
             await initKafka();
 
