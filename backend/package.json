@@ -19,7 +19,9 @@
     "migration:payment": "npm run typeorm -- migration:generate ./service-payments/migrations/PaymentMigration -d ./service-payments/config/data-source.ts",
     "migration:runPayment": "npm run typeorm -- --dataSource ./service-payments/config/data-source.ts migration:run",
     "migration:review": "npm run typeorm -- migration:generate ./service-reviews/migrations/ReviewMigration -d ./service-reviews/config/data-source.ts",
-    "migration:runReview": "npm run typeorm -- --dataSource ./service-reviews/config/data-source.ts migration:run"
+    "migration:runReview": "npm run typeorm -- --dataSource ./service-reviews/config/data-source.ts migration:run",
+    "migration:favorite": "npm run typeorm -- migration:generate ./service-favorites/migrations/FavoriteMigration -d ./service-favorites/config/data-source.ts",
+    "migration:runFavorite": "npm run typeorm -- --dataSource ./service-favorites/config/data-source.ts migration:run"
   },
   "keywords": [],
   "author": "",
