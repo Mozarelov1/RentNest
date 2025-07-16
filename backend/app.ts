@@ -25,7 +25,8 @@ const reservationRoutes = require("./service-reservations/routes/reservation-rou
 const paymentsRoutes = require("./service-payments/routes/payment-routes");
 const reviewsRoutes = require("./service-reviews/routes/review-routes");
 const favoriteRoutes = require("./service-favorites/routes/favorite-routes");
-const chatRoutes = require("./service-chat/routes/chat-routes")
+const chatRoutes = require("./service-chat/routes/chat-routes");
+const searchRoutes = require("./service-search/routes/search-routes")
 
 
 import { initKafka } from "./service-chat/config/kafka";
@@ -63,6 +64,7 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/reviews', reviewsRoutes)
 app.use('/api/favorites', favoriteRoutes)
 app.use('/api/messages', chatRoutes)
+app.use('/api/search', searchRoutes)
 
 // app.use((req: Request, res: Response, next: NextFunction) => {
 //   if (req.body && typeof req.body.content === 'string') {

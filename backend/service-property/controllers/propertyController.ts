@@ -1,10 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
+import axios from 'axios';
+import dotenv from "dotenv";
+import path from "path";
+
 
 const propertyService = require("../services/property-service")
 
 import { CreatePropertyDto } from "../dto/CreatePropertyDto";
 import { UpdatePropertyDto } from "../dto/UpdatePropertyDto";
 import { upload } from '../../S3/s3';
+
+
+dotenv.config({
+    path: path.resolve(__dirname, '../.env')
+  });
 
 class PropertyController{
 
@@ -13,7 +22,9 @@ class PropertyController{
             const dto: CreatePropertyDto = req.body;
 
             const property = await propertyService.createProperty(dto)
-            res.json(property)
+            await axios.post(`${process.env.SEARCH_SERVICE_URL}/api/search/index`,property);
+
+            res.json(property);
         }catch(e){
             console.error('Error creating property:', e);
             next(e);
