@@ -14,7 +14,8 @@ import { ReservationDataSource } from "./service-reservations/config/data-source
 import { PaymentDataSource } from "./service-payments/config/data-source";
 import { ReviewDataSource } from "./service-reviews/config/data-source";
 import { FavoritesDataSource } from "./service-favorites/config/data-source";
-import { ChatDataSource } from "./service-chat/config/data-source"
+import { ChatDataSource } from "./service-chat/config/data-source";
+import { NotifDataSource } from "./service-notifications/config/data-source";
 
 const googlePassConfig = require("./service-auth/config/googlePassport");         // google config
 const bearerTokPassConfig = require("./service-auth/config/bearerTokPassport");   // bearer-token config
@@ -26,7 +27,8 @@ const paymentsRoutes = require("./service-payments/routes/payment-routes");
 const reviewsRoutes = require("./service-reviews/routes/review-routes");
 const favoriteRoutes = require("./service-favorites/routes/favorite-routes");
 const chatRoutes = require("./service-chat/routes/chat-routes");
-const searchRoutes = require("./service-search/routes/search-routes")
+const searchRoutes = require("./service-search/routes/search-routes");
+const notifRoutes = require("./service-notifications/routes/mail-routes")
 
 
 import { initKafka } from "./service-chat/config/kafka";
@@ -61,10 +63,11 @@ app.use('/api/auth',  authRoutes);
 app.use('/api/properties',  propertyRoutes);
 app.use('/api/reservation', reservationRoutes);
 app.use('/api/payments', paymentsRoutes);
-app.use('/api/reviews', reviewsRoutes)
-app.use('/api/favorites', favoriteRoutes)
-app.use('/api/messages', chatRoutes)
-app.use('/api/search', searchRoutes)
+app.use('/api/reviews', reviewsRoutes);
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/messages', chatRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/notifications', notifRoutes);
 
 // app.use((req: Request, res: Response, next: NextFunction) => {
 //   if (req.body && typeof req.body.content === 'string') {
@@ -82,7 +85,8 @@ const start = async () =>{
             await PaymentDataSource.initialize();
             await ReviewDataSource.initialize();
             await FavoritesDataSource.initialize();
-            await ChatDataSource.initialize()
+            await ChatDataSource.initialize();
+            await NotifDataSource.initialize();
 
             await initKafka();
 

@@ -23,7 +23,9 @@
     "migration:favorite": "npm run typeorm -- migration:generate ./service-favorites/migrations/FavoriteMigration -d ./service-favorites/config/data-source.ts",
     "migration:runFavorite": "npm run typeorm -- --dataSource ./service-favorites/config/data-source.ts migration:run",
     "migration:chat": "npm run typeorm -- migration:generate ./service-chat/migrations/ConversationMigration -d ./service-chat/config/data-source.ts",
-    "migration:runChat": "npm run typeorm -- --dataSource ./service-chat/config/data-source.ts migration:run"
+    "migration:runChat": "npm run typeorm -- --dataSource ./service-chat/config/data-source.ts migration:run",
+    "migration:notif": "npm run typeorm -- migration:generate ./service-notifications/migrations/NotifMigration -d ./service-notifications/config/data-source.ts",
+    "migration:runNotif": "npm run typeorm -- --dataSource ./service-notifications/config/data-source.ts migration:run"
   },
   "keywords": [],
   "author": "",
