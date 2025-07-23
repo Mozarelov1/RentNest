@@ -11,7 +11,7 @@ dotenv.config({
 
 const jwt = require('jsonwebtoken');
 
-const reservationService = require('../services/reservation-service')
+const reservationService = require('../services/reservation/reservation-service')
 
 class ReservationController{
 

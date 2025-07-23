@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import passport from "passport";
 import { AuthDataSource }      from "./data-source";
+import { Request, Response } from 'express';
 import { getRepository } from "typeorm";
 
 import path from "path";
@@ -17,12 +18,14 @@ module.exports = () => {
         
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL:  process.env.GOOGLE_CALLBACK_URL
+        callbackURL:  process.env.GOOGLE_CALLBACK_URL,
+        passReqToCallback: true,
 
     },
-        async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+        async (req: Request, accessToken: string, refreshToken: string, profile: any, done: any) => {
             try{
-                
+                const clientIp = req.ip;
+
                 const userRepo = AuthDataSource.getRepository(User);
 
                 let user = await userRepo.findOne({ where : {googleID: profile.id} });
@@ -47,6 +50,7 @@ module.exports = () => {
                     name:     profile.displayName,
                     photo:    profile.photos?.[0]?.value,
                     passwordHash: null,
+                    ip_address: clientIp
                 })
                 
                  await userRepo.save(newUser);

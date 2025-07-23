@@ -78,6 +78,11 @@ module.exports = new EntitySchema({
       type: "int",
       nullable: false,
     },
+    status: {
+      type: 'enum',
+      enum: ["active", "deleted"],
+      default: "active"
+    },
     photos: {
       type:"simple-array",
       nullable: true,

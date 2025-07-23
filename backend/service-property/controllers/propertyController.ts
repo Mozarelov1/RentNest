@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 
 
-const propertyService = require("../services/property-service")
+const propertyService = require("../services/property/property-service")
 
 import { CreatePropertyDto } from "../dto/CreatePropertyDto";
 import { UpdatePropertyDto } from "../dto/UpdatePropertyDto";

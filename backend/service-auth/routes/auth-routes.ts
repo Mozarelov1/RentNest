@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 
-const tokenService = require('../services/token-service');
+const tokenService = require('../services/auth/token-service');
 
 import dotenv from "dotenv";
 import path from "path";

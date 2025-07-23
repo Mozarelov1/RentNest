@@ -7,7 +7,7 @@ dotenv.config({
     path: path.resolve(__dirname, '../.env')
   });
 
-const authService = require("../services/auth-service")
+const authService = require("../services/auth/auth-service")
 
 const jwt = require("jsonwebtoken");
 const BearerStrategy = require('passport-http-bearer').Strategy;

@@ -31,6 +31,20 @@ module.exports = new EntitySchema({
       type: 'varchar',
       nullable: true,
     },
+    role: {
+      type: 'enum',
+      enum: ["user", "moderator", "admin"],
+      default: "user"
+    },
+    status: {
+      type: 'enum',
+      enum: ["active", "banned"],
+      default: "active",
+    },
+    ip_address: {
+      type: 'varchar',
+      nullable: true,
+    },
     createdAt: {
       type: 'timestamp',
       createDate: true,

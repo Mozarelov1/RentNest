@@ -1,10 +1,10 @@
-import { ReviewDataSource } from "../config/data-source";
-import { CreateReviewDto } from '../dto/CreateReviewDto';
+import { ReviewDataSource } from "../../config/data-source";
+import { CreateReviewDto } from '../../dto/CreateReviewDto';
 
-const Review = require("../models/review-model")
+const Review = require("../../models/review-model")
 
 class ReviewService{
-  private reviewRepo = ReviewDataSource.getRepository<typeof Review>(Review);
+  private reviewRepo = ReviewDataSource.getRepository<typeof Review>("Reviews");
   
     async createReview (dto: CreateReviewDto){
 

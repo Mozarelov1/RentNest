@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 
 const jwt = require('jsonwebtoken');
 
-const reviewService = require("../services/review-service")
+const reviewService = require("../services/review/review-service")
 
 class ReviewController {
 

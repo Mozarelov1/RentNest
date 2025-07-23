@@ -115,7 +115,8 @@
   },
   "include": [
     "**/*.ts",
-    "service-payments/types/**/*.d.ts"
+    "service-payments/types/**/*.d.ts",
+    "service-auth/types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

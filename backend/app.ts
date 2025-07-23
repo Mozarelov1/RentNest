@@ -28,7 +28,12 @@ const reviewsRoutes = require("./service-reviews/routes/review-routes");
 const favoriteRoutes = require("./service-favorites/routes/favorite-routes");
 const chatRoutes = require("./service-chat/routes/chat-routes");
 const searchRoutes = require("./service-search/routes/search-routes");
-const notifRoutes = require("./service-notifications/routes/mail-routes")
+const notifRoutes = require("./service-notifications/routes/mail-routes");
+const adminRoutes = require("./service-admin/routes/admin-routes");
+const authAdminRoutes = require("./service-auth/routes/admin-routes");
+const propertyAdminRoutes = require("./service-property/routes/admin-routes");
+const reviewAdminRoutes = require("./service-reviews/routes/admin-routes");
+const reservationAdminRoutes = require("./service-reservations/routes/admin-routes")
 
 
 import { initKafka } from "./service-chat/config/kafka";
@@ -52,6 +57,7 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.set('trust proxy', true);
 
 googlePassConfig();
 bearerTokPassConfig();
@@ -61,13 +67,18 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/api/auth',  authRoutes);
 app.use('/api/properties',  propertyRoutes);
-app.use('/api/reservation', reservationRoutes);
+app.use('/api/reservations', reservationRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/messages', chatRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/notifications', notifRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/users/admin', authAdminRoutes);
+app.use('/api/property/admin', propertyAdminRoutes);
+app.use('/api/review/admin', reviewAdminRoutes);
+app.use('/api/reservation/admin', reservationAdminRoutes);
 
 // app.use((req: Request, res: Response, next: NextFunction) => {
 //   if (req.body && typeof req.body.content === 'string') {

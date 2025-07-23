@@ -3,9 +3,9 @@ import { v4 as uuidv4 } from "uuid"
 
 import dotenv from "dotenv";
 import path from "path";
-import { AuthDataSource } from "../config/data-source";
+import { AuthDataSource } from "../../config/data-source";
 
-const User = require("../models/user-model")
+const User = require("../../models/user-model")
 const jwt = require("jsonwebtoken");
 
 dotenv.config({

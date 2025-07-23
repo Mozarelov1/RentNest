@@ -1,9 +1,9 @@
-import { CreatePropertyDto } from "../dto/CreatePropertyDto";
-import { PropertyDataSource } from "../config/data-source";
+import { CreatePropertyDto } from "../../dto/CreatePropertyDto";
+import { PropertyDataSource } from "../../config/data-source";
 import Boom from '@hapi/boom';
 import type { Express } from 'express';
 
-const Property = require("../models/property-model")
+const Property = require("../../models/property-model")
 
 class PropertyService{
 

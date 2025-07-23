@@ -1,10 +1,10 @@
-import { ReservationDataSource } from "../config/data-source"
-import { CreateReservationDto } from "../dto/CreateReservationDto"
-import { UpdateReservationDto } from "../dto/UpdateReservationDto"
+import { ReservationDataSource } from "../../config/data-source"
+import { CreateReservationDto } from "../../dto/CreateReservationDto"
+import { UpdateReservationDto } from "../../dto/UpdateReservationDto"
 
-const authService = require("../../service-auth/services/auth-service")
+const authService = require("../../../service-auth/services/auth/auth-service")
 
-const Reservation = require("../models/reservation-model")
+const Reservation = require("../../models/reservation-model")
 
 class ReservationService{
 
