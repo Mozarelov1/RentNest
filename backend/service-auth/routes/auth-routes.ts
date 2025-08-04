@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 
-const tokenService = require('../services/auth/token-service');
+const tokenService = require('../services/token-service');
 
 import dotenv from "dotenv";
 import path from "path";
@@ -19,25 +19,35 @@ router.get('/google', passport.authenticate('google', {
 );
 
 router.get( '/google/callback',passport.authenticate('google',{failureRedirect: '/login', session: false}),
-    (req,res) =>{
-         const user = req.user;
-         const token = tokenService.generateJwt(user);
+  async  (req,res, next) =>{
+    try{
+      const user = req.user as any;;
+      const accessToken  = tokenService.generateAccTok(user);
+      const refreshToken = await tokenService.generateRefTok(user);
 
-    res.cookie("jwt", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",                  
-        maxAge: tokenService._parseExpiresIn(process.env.JWT_EXPIRES_IN),
-        path: "/",                        
-      })
-
-     res.json({
-      status: 'success',
-      data: {
-        token
-      },
-    });
+      res
+        .cookie("accessToken", accessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: tokenService._parseExpiresIn(process.env.ACC_TOKEN_EXPIRES_IN!) * 1000,
+          path: "/",
+        })
+        .cookie("refreshToken", refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: tokenService._parseExpiresIn(process.env.REF_TOKEN_EXPIRES_IN!) * 1000,
+          path: "/auth/token",
+        })
+        .json({
+          status: 'success',
+          data: { accessToken },
+        });
+    }catch(e){
+      next(e)
     }
+  }
 )
 
 module.exports = router;

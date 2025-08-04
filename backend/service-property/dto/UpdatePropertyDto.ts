@@ -11,7 +11,6 @@ export interface UpdatePropertyDto {
   area?: number;                
   amenities?: string[];         
   availableFrom?: Date;         
-  availableTo?: Date;           
-  ownerId?: number;              
+  availableTo?: Date;                      
   photos?: string[];            
 }

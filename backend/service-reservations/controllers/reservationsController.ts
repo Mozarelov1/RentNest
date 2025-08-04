@@ -11,21 +11,21 @@ dotenv.config({
 
 const jwt = require('jsonwebtoken');
 
-const reservationService = require('../services/reservation/reservation-service')
+const reservationService = require('../services/reservation-service');
+const jwtCookieService = require('../../utils/JwtCookieService');
 
 class ReservationController{
 
     async createReservation(req: Request, res: Response, next: NextFunction){
         try{
             const token = req.cookies.jwt;
-            if(!token){
-
+            if (!token) {
+                return res.status(401).json({ message: 'Unauthorized: token missing' });
             };
-            const payload = jwt.verify(token, process.env.JWT_SECRET);
-            const userID = payload.sub;
+            const userId = jwtCookieService.getUserIdByToken(token, process.env.JWT_SECRET)
 
             const dto: CreateReservationDto = req.body;
-            dto.tenantID = userID;
+            dto.tenantID = userId;
 
             const reservation = await reservationService.createReservation(dto);
 
@@ -39,13 +39,12 @@ class ReservationController{
     async getReservationList(req: Request, res: Response, next: NextFunction){
         try{
             const token = req.cookies.jwt;
-            if(!token){
-
+            if (!token) {
+                return res.status(401).json({ message: 'Unauthorized: token missing' });
             };
-            const payload = jwt.verify(token, process.env.JWT_SECRET);
-            const userID = payload.sub;
+            const userId = jwtCookieService.getUserIdByToken(token, process.env.JWT_SECRET)
 
-            const reservations = await reservationService.getReservationList(userID);
+            const reservations = await reservationService.getReservationList(userId);
 
         res.json(reservations)
         }catch(e){
@@ -58,7 +57,7 @@ class ReservationController{
         try{
             const reservID = req.params.bookingId;
             if(!reservID){
-
+                return res.status(404).json({ message: 'Reservation not found' });
             }
             
             const reservation = await reservationService.getReservationDetails(reservID);
@@ -74,7 +73,7 @@ class ReservationController{
         try{
             const reservID = req.params.bookingId;
             if(!reservID){
-
+                return res.status(404).json({ message: 'Reservation not found' });
             }
 
             const dto: UpdateReservationDto = req.body;
@@ -91,10 +90,11 @@ class ReservationController{
         try{
             const reservID = req.params.bookingId;
             if(!reservID){
-
+                return res.status(404).json({ message: 'Reservation not found' });
             }
 
-            const cancelledReservation = await reservationService.cancelledReservation(reservID);
+            const cancelledReservation = await reservationService.cancelReservation(reservID);
+            res.status(204).send()
         }catch(e){
             console.error('Error creating property:', e);
             next(e);
@@ -109,6 +109,14 @@ class ReservationController{
             next(e);
         }
     };
+    async getAllReservations(req: Request, res: Response, next: NextFunction) {
+        try {
+            const reservations = await reservationService.getAllReservations();
+            res.json(reservations);
+        } catch (e) {
+            next(e);
+        }
+     };
 
 }
 

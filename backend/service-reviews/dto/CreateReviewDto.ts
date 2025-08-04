@@ -5,4 +5,5 @@ export interface CreateReviewDto {
     propertyID: number;
     senderID: number;
     status: string;
+    propertyOwnerId:number
 }

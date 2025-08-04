@@ -29,6 +29,10 @@ module.exports = new EntitySchema({
       type: "int",
       nullable: false,
     },
+    propertyOwnerId: {
+      type: "int",
+      nullable: false, 
+    },
     status: {
       type: "enum",
       enum: ["uploaded", "deleted"],

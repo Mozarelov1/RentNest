@@ -10,7 +10,7 @@ class ChatService {
   private convRepo = ChatDataSource.getRepository<typeof Conversation>(Conversation);
   private msgRepo = ChatDataSource.getRepository<typeof Message>(Message);
 
-  // Создаёт или возвращает существующий разговор
+  
   async createConversation(dto: CreateConversationDto) {
     const [userId, withUserId] = dto.participants;
     let conv = await this.convRepo
@@ -27,7 +27,7 @@ class ChatService {
     return conv;
   }
 
-  // Список диалогов пользователя
+
   async listConversations(userId: number) {
     return this.convRepo
       .createQueryBuilder('c')
@@ -35,7 +35,7 @@ class ChatService {
       .getMany();
   }
 
-  // История сообщений в разговоре
+
   async getHistory(userId: number, conversationId: number) {
     const conv = await this.convRepo.findOneBy({ id: conversationId });
     if (!conv || !conv.participants.includes(userId)) {
@@ -47,7 +47,7 @@ class ChatService {
     });
   }
 
-  // Отправка сообщения + публикация в Kafka
+
   async sendMessage(userId: number, conversationId: number, text: string) {
     const conv = await this.convRepo.findOneBy({ id: conversationId });
     if (!conv || !conv.participants.includes(userId)) {
@@ -65,7 +65,6 @@ class ChatService {
     return saved;
   }
 
-  // Отметить как прочитанные
   async markAsRead(userId: number, conversationId: number, messageIds: number[]) {
     const msgs = await this.msgRepo.findByIds(messageIds);
     const toUpdate = msgs.filter(

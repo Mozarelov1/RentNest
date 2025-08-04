@@ -31,8 +31,8 @@ class FavoriteService{
         fav = this.favRepo.create({ userId, propertyId });
         return this.favRepo.save(fav);
   }
-    async removeFavorite(propertyId: number){
-        const fav = await this.favRepo.findOneBy({ propertyId });
+    async removeFavorite(favoriteId: string){
+        const fav = await this.favRepo.findOneById(favoriteId);
         fav.status = 'deleted';
         return this.favRepo.save(fav);
     }

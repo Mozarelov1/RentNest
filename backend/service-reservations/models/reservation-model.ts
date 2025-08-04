@@ -12,7 +12,6 @@ module.exports = new EntitySchema({
 
     propertyID: {
       type: "int",
-      primary: true,
       nullable: false,
     },
 

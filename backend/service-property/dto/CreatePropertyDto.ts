@@ -12,6 +12,6 @@ export interface CreatePropertyDto {
   amenities?: string[];         
   availableFrom?: Date;         
   availableTo?: Date;           
-  ownerId: number;   
+  ownerId?: number;   
   photos?: string[];                          
 }

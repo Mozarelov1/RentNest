@@ -1,11 +1,22 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.ts",
   "scripts": {
     "dev": "nodemon app.ts",
+    "dev:auth":    "nodemon --watch service-auth/app.ts    --exec \"npx ts-node service-auth/app.ts\"",
+    "dev:chat":    "nodemon --watch service-chat/app.ts    --exec \"npx ts-node service-chat/app.ts\"",
+    "dev:favor":   "nodemon --watch service-favorites/app.ts --exec \"npx ts-node service-favorites/app.ts\"",
+    "dev:notif":   "nodemon --watch service-notifications/app.ts --exec \"npx ts-node service-notifications/app.ts\"",
+    "dev:payment": "nodemon --watch service-payments/app.ts      --exec \"npx ts-node service-payments/app.ts\"",
+    "dev:property":"nodemon --watch service-property/app.ts     --exec \"npx ts-node service-property/app.ts\"",
+    "dev:reserv":  "nodemon --watch service-reservations/app.ts --exec \"npx ts-node service-reservations/app.ts\"",
+    "dev:review":  "nodemon --watch service-reviews/app.ts       --exec \"npx ts-node service-reviews/app.ts\"",
+    "dev:search":  "nodemon --watch service-search/app.ts       --exec \"npx ts-node service-search/app.ts\"",
+    "dev:startServices": "concurrently \"npm:dev:auth\" \"npm:dev:chat\" \"npm:dev:favor\" \"npm:dev:notif\" \"npm:dev:payment\" \"npm:dev:property\" \"npm:dev:reserv\" \"npm:dev:review\" \"npm:dev:search\"",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "patch-package",
     "typeorm": "ts-node ./node_modules/typeorm/cli.js",
     "migration:auth": "npm run typeorm -- migration:generate ./service-auth/migrations/AuthMigration -d ./service-auth/config/data-source.ts",
     "migration:runAuth": "npm run typeorm -- --dataSource ./service-auth/config/data-source.ts migration:run",
@@ -41,6 +52,7 @@
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.0",
     "cloudipsp-node-js-sdk": "^1.0.8",
+    "concurrently": "^9.2.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
@@ -48,6 +60,8 @@
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
+    "http-proxy": "^1.18.1",
+    "http-proxy-middleware": "^3.0.5",
     "ipsp-js-sdk": "^2.0.12",
     "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",
@@ -79,6 +93,8 @@
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/swagger-ui-express": "^4.1.8",
-    "@types/uuid": "^10.0.0"
+    "@types/uuid": "^10.0.0",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0"
   }
 }
