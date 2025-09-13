@@ -57,16 +57,6 @@ app.use('/api/notifications',passport.authenticate('bearer' , {session: false}),
 
 
 app.use(express.json());
-
-
-// app.use((req: Request, res: Response, next: NextFunction) => {
-//   if (req.body && typeof req.body.content === 'string') {
-//     req.body.content = xss(req.body.content);
-//   }
-//   next();
-// });
-
-
 const start = async () =>{
         try{
             await initKafka();
