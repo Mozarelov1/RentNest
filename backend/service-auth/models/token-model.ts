@@ -8,6 +8,10 @@ module.exports = new EntitySchema({
       type: "uuid",
       primary: true,
     },
+    sub:{
+      type: "int",
+      nullable: false,
+    },
     iat: {
       type: "int",
       nullable: false,

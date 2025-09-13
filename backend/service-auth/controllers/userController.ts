@@ -15,7 +15,13 @@ class UserController{
     };
     async getOwnInfo(req: Request, res: Response, next: NextFunction) {
         try {
-            const token = req.cookies.jwt;
+            const authHeader = (req.headers.authorization || '') as string;
+            const tokenFromHeader = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+            const token = tokenFromHeader ?? (req.cookies.accessToken || req.cookies.token);       
+
+            if (!token) {
+                return res.status(401).json({ message: "No access token" });
+            }  
             const user = await userService.getOwnInfo(token);
             res.json(user);
         } catch (e) { 

@@ -17,7 +17,7 @@ export function ownerOnly<Entity extends ObjectLiteral>(repository: Repository<E
     try {
       const { paramIdName, ownerField } = opts;
       const resourceIdField = 'id'; 
-      const token = req.cookies.jwt;
+      const token = req.cookies.accessToken;
       if (!token) {
         res.status(401).json({ message: 'Unauthorized: token missing' });
         return;

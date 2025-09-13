@@ -4,6 +4,8 @@ import { IUser } from "../dto/IUserDto";
 
 import path from 'path';
 import dotenv from 'dotenv';
+import { UserInfo, UserRole, UserStatus } from "../dto/GetOwnInfo";
+import { ShortUserInfo } from "../dto/ShortUserInfo";
 
 
 dotenv.config({
@@ -15,16 +17,22 @@ class UserService{
 
     private authRepo = AuthDataSource.getRepository<typeof User>("User");
 
-    async findUserById(userId: number){
+    async findUserById(userId: number): Promise<ShortUserInfo>{
         const user = await this.authRepo.findOneById(userId);
         if (!user){
             throw new Error(`User with id=${userId} not found`);
         }
-        return user
+        const dto = {
+            name:      user.name ?? undefined,
+            photo:     user.photo ?? undefined,
+            status:    user.status as UserStatus,
+            createdAt: user.createdAt,
+        }
+        return dto
     };
 
-    async getOwnInfo(token: string){
-        const userId = jwtCookieService.getUserIdByToken(token, process.env.JWT_SECRET);
+    async getOwnInfo(token: string): Promise<UserInfo>{
+        const userId = jwtCookieService.getUserIdByToken(token, process.env.JWT_SECRET) as any;
         if(!userId){
            throw new Error(`Unauthorized`)
         };
@@ -32,7 +40,16 @@ class UserService{
         if (!user){
             throw new Error(`User with id=${userId} not found`);
         }
-        return user
+        const dto = {
+            id:        user.id,
+            email:     user.email,
+            name:      user.name ?? undefined,
+            photo:     user.photo ?? undefined,
+            role:      user.role as UserRole,
+            status:    user.status as UserStatus,
+            createdAt: user.createdAt,
+        }
+        return dto
     }
 
     async getAllUsers() {

@@ -1,15 +1,857 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "rentNest",
+    "title": "rentNest Gateway API",
     "version": "1.0.0",
-    "description": ""
+    "description": "OpenAPI specification for the rentNest API gateway — aligned with provided TypeScript models, DTOs and EntitySchemas."
   },
   "servers": [
-    {
-      "url": "http://localhost:2000",
-      "description": ""
-    }
+    { "url": "http://localhost:2000", "description": "Local gateway" }
   ],
-  "paths": {}
+  "tags": [
+    { "name": "Auth", "description": "Authentication and OAuth routes" },
+    { "name": "Users", "description": "User management endpoints (proxied to auth service)" },
+    { "name": "Chat", "description": "Chat service endpoints" },
+    { "name": "Favorites", "description": "Favorites service" },
+    { "name": "Payments", "description": "Payments service" },
+    { "name": "Properties", "description": "Properties service" },
+    { "name": "Reservations", "description": "Reservations service" },
+    { "name": "Reviews", "description": "Reviews service" },
+    { "name": "Search", "description": "Search/indexing service" },
+    { "name": "Notifications", "description": "Email/notification service" },
+    { "name": "Proxied", "description": "Other proxied microservices" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT", "description": "Authorization: Bearer <accessToken>" },
+      "cookieAuth": { "type": "apiKey", "in": "cookie", "name": "refreshToken" }
+    },
+    "schemas": {
+      "UserRole": { "type": "string", "enum": ["user", "moderator", "admin"] },
+      "UserStatus": { "type": "string", "enum": ["active", "banned"] },
+
+      "IUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "email": { "type": "string", "format": "email" },
+          "passwordHash": { "type": "string", "nullable": true },
+          "googleID": { "type": "string", "nullable": true },
+          "name": { "type": "string", "nullable": true },
+          "photo": { "type": "string", "nullable": true },
+          "role": { "$ref": "#/components/schemas/UserRole" },
+          "status": { "$ref": "#/components/schemas/UserStatus" },
+          "ip_address": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true },
+          "updatedAt": { "type": "string", "format": "date-time", "nullable": true, "readOnly": true }
+        },
+        "required": ["id", "email", "role", "status", "createdAt"]
+      },
+
+      "ShortUserInfo": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "nullable": true },
+          "photo": { "type": "string", "nullable": true },
+          "status": { "$ref": "#/components/schemas/UserStatus" },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true }
+        }
+      },
+
+      "ReservationStatus": {
+        "type": "string",
+        "enum": ["pending", "confirmed", "declined", "cancelled", "paid", "checked_in", "checked_out"]
+      },
+
+      "FavoriteStatus": { "type": "string", "enum": ["uploaded", "deleted"] },
+      "ReviewStatus": { "type": "string", "enum": ["uploaded", "deleted"] },
+      "PropertyStatus": { "type": "string", "enum": ["active", "deleted"] },
+      "PaymentStatus": { "type": "string", "enum": ["pending", "paid", "declined", "cancelled"] },
+
+      "CreateConversationDto": {
+        "type": "object",
+        "properties": { "participants": { "type": "array", "items": { "type": "integer" } } },
+        "required": ["participants"]
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "participants": { "type": "array", "items": { "$ref": "#/components/schemas/ShortUserInfo" } },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true },
+          "updatedAt": { "type": "string", "format": "date-time", "nullable": true, "readOnly": true }
+        }
+      },
+
+      "SendMessageDto": {
+        "type": "object",
+        "properties": { "text": { "type": "string" } },
+        "required": ["text"]
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "conversationId": { "type": "integer" },
+          "senderId": { "type": "integer" },
+          "text": { "type": "string" },
+          "ts": { "type": "integer", "description": "epoch ms stored in DB (bigint)", "readOnly": true },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true },
+          "readBy": { "type": "array", "items": { "type": "integer" } }
+        }
+      },
+
+      "Favorite": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "readOnly": true },
+          "userId": { "type": "integer" },
+          "propertyId": { "type": "integer" },
+          "status": { "$ref": "#/components/schemas/FavoriteStatus" },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true }
+        }
+      },
+
+      "EmailRequest": {
+        "type": "object",
+        "properties": {
+          "to": { "type": "string", "format": "email" },
+          "subject": { "type": "string" },
+          "text": { "type": "string", "nullable": true },
+          "html": { "type": "string", "nullable": true },
+          "templateId": { "type": "integer", "nullable": true },
+          "variables": { "type": "object", "additionalProperties": { "type": "string" }, "nullable": true }
+        },
+        "required": ["to", "subject"]
+      },
+      "Template": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "name": { "type": "string" },
+          "subject": { "type": "string" },
+          "body": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true },
+          "updatedAt": { "type": "string", "format": "date-time", "nullable": true, "readOnly": true }
+        }
+      },
+
+      "CreatePaymentDto": {
+        "type": "object",
+        "properties": {
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "userID": { "type": "integer" },
+          "ipspPaymentId": { "type": "string", "nullable": true }
+        },
+        "required": ["amount", "currency", "userID"]
+      },
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "readOnly": true },
+          "ipspPaymentId": { "type": "string" },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/PaymentStatus" },
+          "userID": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true }
+        }
+      },
+
+      "CreatePropertyDto": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "city": { "type": "string" },
+          "region": { "type": "string", "nullable": true },
+          "street": { "type": "string", "nullable": true },
+          "pricePerNight": { "type": "number" },
+          "currency": { "type": "string", "nullable": true, "default": "USD" },
+          "bedrooms": { "type": "integer", "nullable": true, "default": 1 },
+          "bathrooms": { "type": "integer", "nullable": true, "default": 1 },
+          "area": { "type": "number", "nullable": true },
+          "amenities": { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "availableFrom": { "type": "string", "format": "date-time", "nullable": true },
+          "availableTo": { "type": "string", "format": "date-time", "nullable": true },
+          "photos": { "type": "array", "items": { "type": "string", "format": "uri" }, "nullable": true }
+        },
+        "required": ["title", "city", "pricePerNight"]
+      },
+      "UpdatePropertyDto": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "city": { "type": "string" },
+          "region": { "type": "string" },
+          "street": { "type": "string" },
+          "pricePerNight": { "type": "number" },
+          "currency": { "type": "string" },
+          "bedrooms": { "type": "integer" },
+          "bathrooms": { "type": "integer" },
+          "area": { "type": "number" },
+          "amenities": { "type": "array", "items": { "type": "string" } },
+          "availableFrom": { "type": "string", "format": "date-time" },
+          "availableTo": { "type": "string", "format": "date-time" },
+          "photos": { "type": "array", "items": { "type": "string", "format": "uri" } },
+          "status": { "$ref": "#/components/schemas/PropertyStatus" }
+        }
+      },
+      "Property": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "ownerId": { "type": "integer", "readOnly": true },
+          "title": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "city": { "type": "string" },
+          "region": { "type": "string", "nullable": true },
+          "street": { "type": "string", "nullable": true },
+          "pricePerNight": { "type": "number" },
+          "currency": { "type": "string", "nullable": true },
+          "bedrooms": { "type": "integer" },
+          "bathrooms": { "type": "integer" },
+          "area": { "type": "number", "nullable": true },
+          "amenities": { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "photos": { "type": "array", "items": { "type": "string", "format": "uri" }, "nullable": true },
+          "availableFrom": { "type": "string", "format": "date-time", "nullable": true },
+          "availableTo": { "type": "string", "format": "date-time", "nullable": true },
+          "status": { "$ref": "#/components/schemas/PropertyStatus" },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true },
+          "updatedAt": { "type": "string", "format": "date-time", "nullable": true, "readOnly": true }
+        }
+      },
+
+      "CreateReservationDto": {
+        "type": "object",
+        "properties": {
+          "propertyID": { "type": "integer" },
+          "tenantID": { "type": "integer" },
+          "guests": { "type": "integer" },
+          "startDate": { "type": "string", "format": "date-time" },
+          "endDate": { "type": "string", "format": "date-time" },
+          "status": { "$ref": "#/components/schemas/ReservationStatus", "nullable": true }
+        },
+        "required": ["propertyID", "tenantID", "guests", "startDate", "endDate"]
+      },
+      "UpdateReservationDto": {
+        "type": "object",
+        "properties": {
+          "tenantID": { "type": "integer" },
+          "guests": { "type": "integer" },
+          "startDate": { "type": "string", "format": "date-time" },
+          "endDate": { "type": "string", "format": "date-time" },
+          "status": { "$ref": "#/components/schemas/ReservationStatus" }
+        }
+      },
+      "Reservation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "propertyID": { "type": "integer" },
+          "tenantID": { "type": "integer" },
+          "ownerId": { "type": "integer", "readOnly": true },
+          "guests": { "type": "integer" },
+          "startDate": { "type": "string", "format": "date-time" },
+          "endDate": { "type": "string", "format": "date-time" },
+          "status": { "$ref": "#/components/schemas/ReservationStatus" },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true },
+          "updatedAt": { "type": "string", "format": "date-time", "nullable": true, "readOnly": true }
+        }
+      },
+
+      "CreateReviewDto": {
+        "type": "object",
+        "properties": {
+          "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "comment": { "type": "string" },
+          "bookingID": { "type": "integer" },
+          "propertyID": { "type": "integer" },
+          "senderID": { "type": "integer" },
+          "propertyOwnerId": { "type": "integer" },
+          "status": { "$ref": "#/components/schemas/ReviewStatus", "nullable": true }
+        },
+        "required": ["rating", "bookingID", "propertyID", "senderID", "propertyOwnerId"]
+      },
+      "Review": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid", "readOnly": true },
+          "rating": { "type": "integer" },
+          "comment": { "type": "string" },
+          "bookingID": { "type": "integer" },
+          "propertyID": { "type": "integer" },
+          "senderID": { "type": "integer" },
+          "propertyOwnerId": { "type": "integer" },
+          "status": { "$ref": "#/components/schemas/ReviewStatus" },
+          "createdAt": { "type": "string", "format": "date-time", "readOnly": true },
+          "updatedAt": { "type": "string", "format": "date-time", "nullable": true, "readOnly": true }
+        }
+      },
+
+      "IndexPropertyDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "readOnly": true },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "city": { "type": "string" },
+          "region": { "type": "string" },
+          "street": { "type": "string" },
+          "pricePerNight": { "type": "number" },
+          "currency": { "type": "string" },
+          "bedrooms": { "type": "integer" },
+          "bathrooms": { "type": "integer" },
+          "area": { "type": "number" },
+          "amenities": { "type": "array", "items": { "type": "string" } },
+          "availableFrom": { "type": "string", "format": "date-time" },
+          "availableTo": { "type": "string", "format": "date-time" },
+          "ownerId": { "type": "integer", "readOnly": true },
+          "photos": { "type": "array", "items": { "type": "string", "format": "uri" } }
+        }
+      },
+
+      "SearchQueryDto": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string" },
+          "city": { "type": "string" },
+          "region": { "type": "string" },
+          "minPrice": { "type": "number" },
+          "maxPrice": { "type": "number" },
+          "minBedrooms": { "type": "integer" },
+          "maxBedrooms": { "type": "integer" },
+          "minBathrooms": { "type": "integer" },
+          "maxBathrooms": { "type": "integer" },
+          "minArea": { "type": "number" },
+          "maxArea": { "type": "number" },
+          "amenities": { "type": "array", "items": { "type": "string" } },
+          "availableOn": { "type": "string", "format": "date-time" },
+          "page": { "type": "integer" },
+          "size": { "type": "integer" }
+        }
+      },
+
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": { "type": "string" },
+          "expiresIn": { "type": "integer", "nullable": true }
+        }
+      },
+
+      "Error": {
+        "type": "object",
+        "properties": { "status": { "type": "string" }, "message": { "type": "string" } }
+      }
+    }
+  },
+
+  "paths": {
+    "/api/auth/google": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Initiate Google OAuth2 authentication",
+        "responses": { "302": { "description": "Redirect to Google" } }
+      }
+    },
+    "/api/auth/google/callback": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Google OAuth2 callback",
+        "responses": { "302": { "description": "Redirect to client with token" }, "401": { "description": "Auth failed" } }
+      }
+    },
+    "/api/auth/refresh": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Refresh access token (reads refreshToken cookie)",
+        "responses": {
+          "200": {
+            "description": "New access token",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TokenResponse" } } }
+          },
+          "401": { "description": "Invalid or missing token" }
+        }
+      }
+    },
+
+    "/api/user/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get current user's profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IUser" } } } },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/user": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get all users (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Array of users", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/IUser" } } } } },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/user/{userId}": {
+      "parameters": [{ "name": "userId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user by id",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "User", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IUser" } } } }, "401": { "description": "Unauthorized" }, "404": { "description": "Not found" } }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update user",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "email": { "type": "string" }, "name": { "type": "string" }, "photo": { "type": "string" }, "role": { "$ref": "#/components/schemas/UserRole" }, "status": { "$ref": "#/components/schemas/UserStatus" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Updated user", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IUser" } } } }, "400": { "description": "Validation error" } }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Delete user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "204": { "description": "Deleted" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/user/{userId}/role": {
+      "parameters": [{ "name": "userId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "put": {
+        "tags": ["Users"],
+        "summary": "Add/assign role to user",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "properties": { "role": { "$ref": "#/components/schemas/UserRole" } }, "required": ["role"] }
+            }
+          }
+        },
+        "responses": { "200": { "description": "User updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IUser" } } } } }
+      }
+    },
+
+    "/api/messages/conversations": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Create a conversation",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateConversationDto" } } } },
+        "responses": { "201": { "description": "Conversation created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Conversation" } } } }, "401": { "description": "Unauthorized" } }
+      },
+      "get": {
+        "tags": ["Chat"],
+        "summary": "List conversations for current user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of conversations", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Conversation" } } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/messages/conversations/{conversationId}": {
+      "parameters": [{ "name": "conversationId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "get": {
+        "tags": ["Chat"],
+        "summary": "Get conversation history",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of messages", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Message" } } } } }, "401": { "description": "Unauthorized" }, "404": { "description": "Conversation not found" } }
+      }
+    },
+    "/api/messages/conversations/{conversationId}/send": {
+      "parameters": [{ "name": "conversationId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Send a message in a conversation",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SendMessageDto" } } } },
+        "responses": { "201": { "description": "Message created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Message" } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/messages/conversations/{conversationId}/read": {
+      "parameters": [{ "name": "conversationId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Mark messages as read",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object", "properties": { "messageIds": { "type": "array", "items": { "type": "integer" } } }, "required": ["messageIds"] }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Marked as read", "content": { "application/json": { "schema": { "type": "object", "properties": { "updated": { "type": "integer" } } } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+
+    "/api/favorites/add/{propertyId}": {
+      "post": {
+        "tags": ["Favorites"],
+        "summary": "Add property to favorites",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "201": { "description": "Favorite created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Favorite" } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/favorites": {
+      "get": {
+        "tags": ["Favorites"],
+        "summary": "Get favorites for current user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of favorites", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Favorite" } } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/favorites/remove/{favoriteId}": {
+      "delete": {
+        "tags": ["Favorites"],
+        "summary": "Remove favorite (ownerOnly)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "favoriteId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "204": { "description": "Removed" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+
+    "/api/notifications/email/send": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Send email",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailRequest" } } } },
+        "responses": { "200": { "description": "Email sent" }, "404": { "description": "Template not found" } }
+      }
+    },
+    "/api/notifications/email/templates": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Get email templates",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of templates", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Template" } } } } } }
+      },
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Create email template",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "name": { "type": "string" }, "subject": { "type": "string" }, "body": { "type": "string" } }, "required": ["name", "subject", "body"] } } } },
+        "responses": { "201": { "description": "Template created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Template" } } } } }
+      }
+    },
+
+    "/api/payments/initiate": {
+      "post": {
+        "tags": ["Payments"],
+        "summary": "Initiate payment",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatePaymentDto" } } } },
+        "responses": { "201": { "description": "Payment created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Payment" } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/payments/{id}/cancel": {
+      "post": {
+        "tags": ["Payments"],
+        "summary": "Cancel payment (ownerOnly)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Cancelled" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/payments/history": {
+      "get": {
+        "tags": ["Payments"],
+        "summary": "Get payment history for user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of payments", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Payment" } } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/payments/{id}": {
+      "get": {
+        "tags": ["Payments"],
+        "summary": "Get payment by id (ownerOnly)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Payment", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Payment" } } } }, "404": { "description": "Not found" } }
+      }
+    },
+    "/api/payments/{id}/status": {
+      "put": {
+        "tags": ["Payments"],
+        "summary": "Update payment status",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "$ref": "#/components/schemas/PaymentStatus" } }, "required": ["status"] } } } },
+        "responses": { "200": { "description": "Updated" }, "400": { "description": "Missing fields" } }
+      }
+    },
+
+    "/api/properties/new": {
+      "post": {
+        "tags": ["Properties"],
+        "summary": "Create property",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatePropertyDto" } } } },
+        "responses": { "200": { "description": "Property created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Property" } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/properties/{propertyId}/photo": {
+      "post": {
+        "tags": ["Properties"],
+        "summary": "Upload property photo (multipart/form-data)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": { "photo": { "type": "string", "format": "binary" } },
+                "required": ["photo"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Photo uploaded" } }
+      }
+    },
+    "/api/properties": {
+      "get": {
+        "tags": ["Properties"],
+        "summary": "List properties (supports query params for pagination & filters)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
+          { "name": "city", "in": "query", "schema": { "type": "string" } },
+          { "name": "minPrice", "in": "query", "schema": { "type": "number" } },
+          { "name": "maxPrice", "in": "query", "schema": { "type": "number" } }
+        ],
+        "responses": { "200": { "description": "Array of properties", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Property" } } } } } }
+      }
+    },
+    "/api/properties/{propertyId}": {
+      "get": {
+        "tags": ["Properties"],
+        "summary": "Get property by id",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Property", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Property" } } } }, "404": { "description": "Not found" } }
+      }
+    },
+    "/api/properties/{propertyId}/edit": {
+      "put": {
+        "tags": ["Properties"],
+        "summary": "Update property",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePropertyDto" } } } },
+        "responses": { "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Property" } } } } }
+      }
+    },
+    "/api/properties/{propertyId}/restore": {
+      "put": {
+        "tags": ["Properties"],
+        "summary": "Restore property (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Restored" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/properties/{propertyId}/delete": {
+      "delete": {
+        "tags": ["Properties"],
+        "summary": "Delete property (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Deleted" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/properties/{propertyId}/delete/soft": {
+      "delete": {
+        "tags": ["Properties"],
+        "summary": "Soft delete property",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "204": { "description": "Soft deleted" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/properties/{propertyId}/owner": {
+      "get": {
+        "tags": ["Properties"],
+        "summary": "Get ownerId by property",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Owner id", "content": { "application/json": { "schema": { "type": "integer" } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+
+    "/api/reservations/new": {
+      "post": {
+        "tags": ["Reservations"],
+        "summary": "Create reservation",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateReservationDto" } } } },
+        "responses": { "200": { "description": "Reservation created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Reservation" } } } }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/reservations/my": {
+      "get": {
+        "tags": ["Reservations"],
+        "summary": "Get current user's reservations",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of reservations", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Reservation" } } } } } }
+      }
+    },
+    "/api/reservations": {
+      "get": {
+        "tags": ["Reservations"],
+        "summary": "Get all reservations (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of reservations", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Reservation" } } } } } }
+      }
+    },
+    "/api/reservations/{bookingId}": {
+      "parameters": [{ "name": "bookingId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+      "get": {
+        "tags": ["Reservations"],
+        "summary": "Get reservation details",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Reservation", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Reservation" } } } } }
+      },
+      "put": {
+        "tags": ["Reservations"],
+        "summary": "Update reservation",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdateReservationDto" } } } },
+        "responses": { "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Reservation" } } } } }
+      },
+      "delete": {
+        "tags": ["Reservations"],
+        "summary": "Cancel reservation",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "204": { "description": "Cancelled" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/api/reservations/host": {
+      "post": {
+        "tags": ["Reservations"],
+        "summary": "Get owner/host reservation list (POST body may contain filters)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of reservations", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Reservation" } } } } } }
+      }
+    },
+
+    "/api/reviews/{propertyId}": {
+      "post": {
+        "tags": ["Reviews"],
+        "summary": "Create review for property",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreateReviewDto" } } } },
+        "responses": { "201": { "description": "Review created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Review" } } } } }
+      },
+      "get": {
+        "tags": ["Reviews"],
+        "summary": "Get reviews by property",
+        "parameters": [{ "name": "propertyId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": { "200": { "description": "Array of reviews", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Review" } } } } } }
+      }
+    },
+    "/api/reviews": {
+      "get": {
+        "tags": ["Reviews"],
+        "summary": "Get all reviews (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of reviews", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Review" } } } } } }
+      }
+    },
+    "/api/reviews/{reviewId}": {
+      "get": {
+        "tags": ["Reviews"],
+        "summary": "Get review by id",
+        "parameters": [{ "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Review", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Review" } } } } }
+      }
+    },
+    "/api/reviews/my": {
+      "get": {
+        "tags": ["Reviews"],
+        "summary": "Get my reviews",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Array of reviews", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Review" } } } } } }
+      }
+    },
+    "/api/reviews/{reviewId}/edit": {
+      "put": {
+        "tags": ["Reviews"],
+        "summary": "Update review",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "rating": { "type": "integer" }, "comment": { "type": "string" } } } } } },
+        "responses": { "200": { "description": "Updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Review" } } } } }
+      }
+    },
+    "/api/reviews/{reviewId}/restore": {
+      "put": {
+        "tags": ["Reviews"],
+        "summary": "Restore review",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Restored" } }
+      }
+    },
+    "/api/reviews/{reviewId}/delete": {
+      "delete": {
+        "tags": ["Reviews"],
+        "summary": "Delete review (admin)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Deleted" } }
+      }
+    },
+    "/api/reviews/{reviewId}/delete/soft": {
+      "delete": {
+        "tags": ["Reviews"],
+        "summary": "Soft delete review",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "reviewId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "204": { "description": "Soft deleted" } }
+      }
+    },
+
+    "/api/search/index": {
+      "post": {
+        "tags": ["Search"],
+        "summary": "Index property for search",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IndexPropertyDto" } } } },
+        "responses": { "200": { "description": "Indexed" } }
+      }
+    },
+    "/api/search/search": {
+      "get": {
+        "tags": ["Search"],
+        "summary": "Search properties",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "Search results", "content": { "application/json": { "schema": { "type": "object", "properties": { "total": { "type": "integer" }, "items": { "type": "array", "items": { "$ref": "#/components/schemas/Property" } } } } } } } }
+      }
+    }
+  }
 }

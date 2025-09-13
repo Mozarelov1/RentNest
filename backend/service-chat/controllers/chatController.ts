@@ -7,7 +7,7 @@ const chatService = require("../services/chat-service")
 class ChatController {
   async createConversation(req: Request, res: Response, next: NextFunction) {
     try {
-      const token = req.cookies.jwt;
+      const token = req.cookies.accessToken;
       if (!token) {
         return res.status(401).json({ message: 'Unauthorized: token missing' });
       }
@@ -27,7 +27,7 @@ class ChatController {
 
   async listConversations(req: Request, res: Response, next: NextFunction) {
     try {
-      const token = req.cookies.jwt;
+      const token = req.cookies.accessToken;
       if (!token) {
         return res.status(401).json({ message: 'Unauthorized: token missing' });
       }
@@ -44,7 +44,7 @@ class ChatController {
 
   async getHistory(req: Request, res: Response, next: NextFunction) {
     try {
-      const token = req.cookies.jwt;
+      const token = req.cookies.accessToken;
       if (!token) {
         return res.status(401).json({ message: 'Unauthorized: token missing' });
       }
@@ -62,7 +62,7 @@ class ChatController {
 
   async sendMessage(req: Request, res: Response, next: NextFunction) {
     try {
-      const token = req.cookies.jwt;
+      const token = req.cookies.accessToken;
       if (!token) {
         return res.status(401).json({ message: 'Unauthorized: token missing' });
       }
@@ -81,7 +81,7 @@ class ChatController {
 
   async markAsRead(req: Request, res: Response, next: NextFunction) {
     try {
-      const token = req.cookies.jwt;
+      const token = req.cookies.accessToken;
       if (!token) {
         return res.status(401).json({ message: 'Unauthorized: token missing' });
       }

@@ -13,12 +13,12 @@ const jwt_secret = process.env.JWT_SECRET;
 
 export function authorize(allowedRoles: Role[] ) {
     return async (req: Request, res: Response, next: NextFunction) => {
-        const token = req.cookies.jwt;
+        const token = req.cookies.accessToken;
         if (!token) {
             throw new Error('Unauthorized: token missing');
         };
         //@ts-ignore
-        const response = await axios.get('http://localhost:2001/api/user/me',{headers: { Cookie: `jwt=${token}` }, timeout: 5000})
+        const response = await axios.get('http://localhost:2001/api/user/me',{headers: { Cookie: `accessToken=${token}` }, timeout: 5000})
         const user = response.data;
         if (!user){
             throw new Error(`User with id=${user.id} not found`);

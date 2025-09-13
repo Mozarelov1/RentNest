@@ -81,6 +81,13 @@ class TokenService{
 
           }
       }
+      verifyRefTok(token: string) {
+        try {
+          return jwt.verify(token, this.jwtSecret) as any;
+        } catch (err) {
+          throw new Error("Invalid token");
+        }
+      }
 
 }
 

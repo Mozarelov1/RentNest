@@ -11,7 +11,7 @@ class ReviewController {
 
     async createReview(req: Request, res: Response, next: NextFunction){
         try{
-            const token = req.cookies.jwt;
+            const token = req.cookies.accessToken;
             if (!token) {
                 return res.status(401).json({ message: 'Unauthorized: token missing' });
             };
@@ -21,13 +21,13 @@ class ReviewController {
             const { rating, comment, bookingID } = req.body;
             const dto = { rating, comment, bookingID, propertyID, senderID };
             
-            const response = await axios.get(`http://localhost:2002/api/properties/${propertyID}/owner`, {headers: { Cookie: `jwt=${token}` }, timeout: 5000});
+            const response = await axios.get(`http://localhost:2002/api/properties/${propertyID}/owner`, {headers: { Cookie: `accessToken=${token}` }, timeout: 5000});
             const ownerId = response.data;
 
             const review = await reviewService.createReview({...dto, propertyOwnerId: ownerId});
             return res.status(201).json(review);
-        }catch(e){
-            console.error('Error creating property:', e);
+        }catch(e: any){
+            console.log('Error creating property:', e);
             next(e); 
         }
     };
@@ -58,7 +58,7 @@ class ReviewController {
 
     async getMyReviews(req: Request, res: Response, next: NextFunction){
         try{
-            const token = req.cookies.jwt;
+            const token = req.cookies.accessToken;
             if (!token) {
                 return res.status(401).json({ message: 'Unauthorized: token missing' });
             };
