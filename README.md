@@ -1,163 +1,255 @@
-# `rentNest` Gateway API
+# Backend (monorepo) — README
 
-> **Backend pet-project** — single-file OpenAPI gateway for a small rental platform. Designed as a minimal, practical API gateway that proxies and composes multiple microservices (auth, users, properties, reservations, payments, search, notifications, etc.).
-
----
-
-## Quick facts
-
-* **Spec**: OpenAPI 3.0 (included in `openapi.json`).
-* **Default port**: `2000` (configurable via `PORT`).
-* **Primary goal**: provide a single HTTP façade for frontend clients and centralize auth, routing and request shaping.
+> Monorepo of backend microservices (Node + TypeScript + TypeORM).
+> Services: `service-auth`, `service-chat`, `service-favorites`, `service-notifications`, `service-payments`, `service-property`, `service-reservations`, `service-reviews`, `service-search`.
 
 ---
 
-## File layout (conceptual)
+## Table of contents
+
+* [Quick summary](#quick-summary)
+* [Prerequisites](#prerequisites)
+* [Environment files (per-service `.env`)](#environment-files-per-service-env)
+* [Install & run](#install--run)
+* [Start Elasticsearch, ZooKeeper and Kafka](#start-elasticsearch-zookeeper-and-kafka)
+* [Run the backend (dev modes)](#run-the-backend-dev-modes)
+* [Database migrations (TypeORM)](#database-migrations-typeorm)
+
+---
+
+## Quick summary
+
+* Use `npm run dev` to start the **root** app (API gateway / aggregator).
+* Use `npm run dev:startServices` to start **all** microservices in parallel (uses `concurrently` and the per-service `dev:*` scripts).
+* Each microservice has its own `.env` stored in the service directory (see examples below).
+
+---
+
+## Prerequisites
+
+* Node.js (16+ recommended) and npm
+* TypeScript toolchain (`npm install` will install `ts-node`, `nodemon`, etc.)
+* PostgreSQL (default port `5432`) — one database per service (configurable in service `.env`)
+* Kafka (and ZooKeeper) or a Kafka alternative broker
+* Elasticsearch (or a running Elasticsearch instance)
+  Ports used in the examples:
+* PostgreSQL: `5432`
+* Elasticsearch: `9200`
+* Kafka broker: `9092`
+
+---
+
+## Environment files (per-service `.env`)
+
+Create **one `.env` file per service** in the service directory (do **NOT** commit real `.env` files).
+
+> **Do not commit** actual `.env` files with secrets. Use `.env.example` in repo and add `.env` to `.gitignore`.
+
+### `service-auth/.env` (example)
 
 ```
-/ (repo root)
-├─ src/                # gateway code (routing, auth middleware, proxy helpers)
-├─ openapi.json        # canonical API contract (OpenAPI 3.0)
-├─ Dockerfile
-├─ docker-compose.yml  # optional: bring up gateway + mock services
-├─ .env                # environment variables used in dev
-└─ README.md           # this file
+# OAuth
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET
+GOOGLE_CALLBACK_URL=http://localhost:2000/api/auth/google/callback
+
+# JWT
+JWT_SECRET=YOUR_JWT_SECRET
+ACC_TOKEN_EXPIRES_IN=1m
+REF_TOKEN_EXPIRES_IN=5m
+
+# Client + DB
+CLIENT_URL=http://localhost:5173
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=your_db_password
+DB_NAME_AUTH=auth
+
+NODE_ENV=development
+DOMAIN=localhost
+```
+
+### `service-chat/.env` (example)
+
+```
+DB_NAME_CHAT=chats
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=your_db_password
+
+# Kafka
+KAFKA_CLIENT_ID=rentnest-client
+KAFKA_BROKERS=localhost:9092
+KAFKA_INPUT_TOPIC=chat-messages
+KAFKA_OUTPUT_TOPIC=chat-processed
+```
+
+### `service-favorites/.env` (example)
+
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=your_db_password
+DB_NAME_FAVORITES=favorites
+
+JWT_SECRET=YOUR_JWT_SECRET
+```
+
+### `service-notifications/.env` (example)
+
+```
+SMTP_HOST=smtp.example.com
+SMTP_USER=your_smtp_user
+SMTP_PASSWORD=your_smtp_password
+SMTP_SECURE=false
+
+DB_NAME_NOTIF=notifications
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=your_db_password
+```
+
+### `service-payments/.env` (example)
+
+```
+FONDY_MERCHANT_ID=your_merchant_id
+FONDY_SECRET_KEY=your_fondy_secret
+FONDY_API_URL=https://sandbox.fondy.eu/api
+
+KAFKA_BROKERS=localhost:9092
+
+DB_NAME_PAYMENT=payments
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=your_db_password
+
+JWT_SECRET=YOUR_JWT_SECRET
+```
+
+### `service-property/.env` (example)
+
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=your_db_password
+DB_NAME_PROPERTY=property
+
+SEARCH_SERVICE_URL=http://localhost:2008
+
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_CALLBACK_URL=http://localhost:2000/api/auth/google/callback
+
+JWT_SECRET=YOUR_JWT_SECRET
+JWT_EXPIRES_IN=15m
+CLIENT_URL=http://localhost:5173
+```
+
+### `service-reservations/.env` (example)
+
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=your_db_password
+DB_NAME_RESERVATION=reservation
+
+JWT_SECRET=YOUR_JWT_SECRET
+```
+
+### `service-reviews/.env` (example)
+
+```
+DB_NAME_REVIEWS=reviews
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=your_db_password
+
+JWT_SECRET=YOUR_JWT_SECRET
+```
+
+### `service-search/.env` (example)
+
+```
+ELASTIC_URL=http://localhost:9200
 ```
 
 ---
 
-## Running (developer quickstart)
+## Install & run
 
-1. install deps
+1. Clone and install:
 
 ```bash
+git clone <repo-url>
+cd backend
 npm install
 ```
 
-2. copy `.env.example` -> `.env` and fill values
+2. Create `.env` files in each `service-*` directory using the examples above.
 
-3. run locally
+---
+
+## Start Elasticsearch, ZooKeeper and Kafka
+
+You must start Elasticsearch, ZooKeeper and Kafka manually before running the services. Make sure:
+
+* Elasticsearch is accessible at `http://localhost:9200`.
+* ZooKeeper is running and reachable at port `2181`.
+* Kafka broker is running and reachable at `localhost:9092`.
+
+## Run the backend (dev modes)"
+
+**Start only the root app / gateway**
 
 ```bash
 npm run dev
-# or
-npm start
 ```
 
-4. open `http://localhost:2000` (or your `GATEWAY_URL`).
-
-> If downstream microservices are not running, use simple HTTP mocks or `docker-compose` that brings up minimal stub services.
-
----
-
-## Environment variables (example)
-
-```env
-PORT=2000
-GATEWAY_URL=http://localhost:2000
-AUTH_SERVICE_URL=http://localhost:3001
-PROPERTIES_SERVICE_URL=http://localhost:3003
-RESERVATIONS_SERVICE_URL=http://localhost:3004
-PAYMENTS_SERVICE_URL=http://localhost:3005
-SEARCH_SERVICE_URL=http://localhost:3008
-NOTIFICATIONS_SERVICE_URL=http://localhost:3009
-
-JWT_SECRET=replace_with_strong_secret
-REFRESH_TOKEN_SECRET=replace_with_another_secret
-OAUTH_GOOGLE_CLIENT_ID=...
-OAUTH_GOOGLE_CLIENT_SECRET=...
-CLIENT_REDIRECT_URL=http://localhost:3000/auth/callback
-COOKIE_SECURE=false
-```
-
----
-
-## API highlights (examples)
-
-### Auth / OAuth
-
-* `GET  /api/auth/google` — redirect to Google OAuth2
-* `GET  /api/auth/google/callback` — OAuth callback
-* `GET  /api/auth/refresh` — refresh access token (reads `refreshToken` cookie)
-
-### Users
-
-* `GET  /api/user/me` — current user (requires `Authorization: Bearer <token>`)
-* `GET  /api/user` — list users (admin)
-* `PUT  /api/user/{userId}` — update user
-
-### Properties
-
-* `GET  /api/properties` — list + filters
-* `POST /api/properties/new` — create property
-* `POST /api/properties/{propertyId}/photo` — multipart upload proxy
-
-### Reservations
-
-* `POST /api/reservations/new` — create reservation
-* `GET  /api/reservations/my` — my reservations
-
-### Payments
-
-* `POST /api/payments/initiate` — start payment
-* `GET  /api/payments/history` — list user payments
-
-### Search
-
-* `POST /api/search/index` — index property DTO
-* `GET  /api/search/search?q=...` — search
-
-> See `openapi.json` for full schemas: `IUser`, `Property`, `Reservation`, `Payment`, `Review`, `Favorite`, etc.
-
----
-
-## Example `curl` requests
+**Start all microservices in parallel**
 
 ```bash
-# get my profile (bearer token)
-curl -H "Authorization: Bearer $ACCESS_TOKEN" \
-  http://localhost:2000/api/user/me
-
-# search
-curl "http://localhost:2000/api/search/search?q=pool&page=1&limit=10"
+npm run dev:startServices
 ```
 
----
+**Order recommendation for local dev**
 
-## Notes for implementers
-
-* The gateway should *not* implement business logic — it proxies, validates and composes. Heavy logic (user provisioning, payments, search indexing) belongs to downstream services.
-* Keep auth/role checks centralized in middleware; surface only high-level errors to clients and preserve downstream status codes when appropriate.
-* Preserve request bodies (including `multipart/form-data`) when proxying file uploads.
-* Emit structured logs and propagate trace headers to downstream services.
+1. Start PostgreSQL (databases for services)
+2. Start Elasticsearch (if using search)
+3. Start ZooKeeper and Kafka broker
+4. Start services (either `npm run dev:startServices` or individual `npm run dev:...`)
 
 ---
 
-## Docker (dev stub)
+## Database migrations (TypeORM)
 
-A minimal `docker-compose.yml` can start the gateway and simple mock services on separate ports. Use environment variables to wire service URLs.
+There are per-service migration scripts in `package.json` (root). Examples:
+
+Generate a migration for `service-auth`:
+
+```bash
+npm run migration:auth
+```
+
+Run migrations for `service-auth`:
+
+```bash
+npm run migration:runAuth
+```
+
+Revert:
+
+```bash
+npm run migration:revertAuth
+```
+
+There are similar commands for `property`, `reservations`, `payments`, `reviews`, `favorites`, `chat`, `notifications`.
 
 ---
-
-## Testing
-
-* Unit tests: test routing, auth middleware and small helpers.
-* Integration tests: spin the gateway with mocked downstreams (WireMock / nock / lightweight Express) and assert contract conformance to `openapi.json`.
-
----
-
-## Roadmap & ideas
-
-* Add rate limiting and IP throttling
-* Add OpenAPI-based request validation and contract tests in CI
-* Add a small admin UI for inspecting proxied requests and mock toggles
-
----
-
-## License
-
-MIT
-
----
-
-*For the full contract, inspect `openapi.json` — keep it as the source of truth for frontend clients.*
